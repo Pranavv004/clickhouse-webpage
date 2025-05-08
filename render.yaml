@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: clickhouse-webpage
+    env: static
+    plan: free
+    staticPublishPath: .
+    buildCommand: echo "No build required"
+    envVars:
+      - key: NODE_VERSION
+        value: 18
+
