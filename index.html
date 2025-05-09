@@ -1,128 +1,29 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script>
      <!DOCTYPE html>
      <html lang="en">
      <head>
          <meta charset="UTF-8">
          <meta name="viewport" content="width=device-width, initial-scale=1.0">
-         <title>ClickHouse Rate Limiter</title>
-         <style>
-             body {
-                 font-family: Arial, sans-serif;
-                 max-width: 800px;
-                 margin: 20px auto;
-                 padding: 20px;
-                 text-align: center;
-             }
-             button {
-                 padding: 10px 20px;
-                 margin: 10px;
-                 font-size: 16px;
-                 cursor: pointer;
-                 background-color: #007bff;
-                 color: white;
-                 border: none;
-                 border-radius: 5px;
-             }
-             button:hover {
-                 background-color: #0056b3;
-             }
-             #response, #metrics {
-                 margin-top: 20px;
-                 padding: 10px;
-                 border: 1px solid #ccc;
-                 border-radius: 5px;
-                 min-height: 50px;
-             }
-             .error {
-                 color: red;
-             }
-         </style>
+         <title>ClickHouse Query</title>
      </head>
      <body>
-         <h1>ClickHouse Rate Limiter</h1>
-         <p>Send requests to query the ClickHouse database (4 requests/second limit).</p>
-         <button onclick="sendQuery()">Send Query</button>
-         <button onclick="getMetrics()">Check Metrics</button>
-         <div id="response">Response will appear here...</div>
-         <div id="metrics">Metrics will appear here...</div>
-
+         <h1>ClickHouse Query Interface</h1>
+         <button onclick="fetchData()">Fetch Country</button>
+         <p id="result"></p>
          <script>
-             const API_URL = 'https://host-rate-lumitar.onrender.com'; // Replace with your Render API URL
-
-             async function sendQuery() {
-                 const responseDiv = document.getElementById('response');
-                 responseDiv.innerHTML = 'Sending request...';
+             const API_URL = 'https://host-rate-lumitar.onrender.com';
+             async function fetchData() {
                  try {
-                     const response = await fetch(`${API_URL}/query`, { method: 'GET' });
-                     const text = await response.text();
-                     if (response.ok) {
-                         responseDiv.innerHTML = text;
-                         responseDiv.classList.remove('error');
-                     } else {
-                         responseDiv.innerHTML = `Error: ${text} (Status: ${response.status})`;
-                         responseDiv.classList.add('error');
+                     const response = await fetch(`${API_URL}/query`, {
+                         method: 'GET',
+                         headers: { 'Content-Type': 'application/json' }
+                     });
+                     if (!response.ok) {
+                         throw new Error(`HTTP error! Status: ${response.status}`);
                      }
+                     const data = await response.json();
+                     document.getElementById('result').innerText = `Result: ${data.result}`;
                  } catch (error) {
-                     responseDiv.innerHTML = `Error: ${error.message}`;
-                     responseDiv.classList.add('error');
-                 }
-             }
-
-             async function getMetrics() {
-                 const metricsDiv = document.getElementById('metrics');
-                 metricsDiv.innerHTML = 'Fetching metrics...';
-                 try {
-                     const response = await fetch(`${API_URL}/metrics`, { method: 'GET' });
-                     const text = await response.text();
-                     if (response.ok) {
-                         metricsDiv.innerHTML = text;
-                         metricsDiv.classList.remove('error');
-                     } else {
-                         metricsDiv.innerHTML = `Error: ${text} (Status: ${response.status})`;
-                         metricsDiv.classList.add('error');
-                     }
-                 } catch (error) {
-                     metricsDiv.innerHTML = `Error: ${error.message}`;
-                     metricsDiv.classList.add('error');
+                     document.getElementById('result').innerText = `Error: ${error.message}`;
                  }
              }
          </script>
