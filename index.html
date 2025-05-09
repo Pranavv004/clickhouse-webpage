@@ -1,31 +1,36 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
- <meta charset="UTF-8">
- <meta name="viewport" content="width=device-width, initial-scale=1.0">
- <title>ClickHouse Query</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClickHouse Query</title>
 </head>
 <body>
- <h1>ClickHouse Query Interface</h1>
- <button onclick="fetchData()">Fetch Country</button>
- <p id="result"></p>
- <script>
-     const API_URL = 'https://host-rate-lumitar.onrender.com';
-     async function fetchData() {
-         try {
-             const response = await fetch(`${API_URL}/query`, {
-                 method: 'GET',
-                 mode: 'cors'
-             });
-             if (!response.ok) {
-                 throw new Error(`HTTP error! Status: ${response.status}`);
-             }
-             const text = await response.text();
-             document.getElementById('result').innerText = text;
-         } catch (error) {
-             document.getElementById('result').innerText = `Error: ${error.message}`;
-         }
-     }
- </script>
+    <h1>ClickHouse Query Interface</h1>
+    <button onclick="fetchData()">Fetch Country</button>
+    <p id="result"></p>
+    <script>
+        const API_URL = 'https://host-rate-lumitar.onrender.com';
+        async function fetchData() {
+            try {
+                const response = await fetch(`${API_URL}/query`, {
+                    method: 'GET',
+                    mode: 'cors'
+                });
+                const text = await response.text();
+                if (response.status === 429) {
+                    alert("Too many requests at a time");
+                    document.getElementById('result').innerText = '';
+                    return;
+                }
+                if (!response.ok) {
+                    throw new Error(`HTTP error! Status: ${response.status}`);
+                }
+                document.getElementById('result').innerText = text;
+            } catch (error) {
+                document.getElementById('result').innerText = `Error: ${error.message}`;
+            }
+        }
+    </script>
 </body>
 </html>
